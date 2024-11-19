@@ -1,9 +1,9 @@
 from typing import Annotated
-from fastapi import Response,status,HTTPException,Query, APIRouter
+from fastapi import Depends, Response,status,HTTPException,Query, APIRouter
 from .. import models,schemas
 from sqlmodel import select
 from ..database import SessionDep
-
+from ..utils import CurrentUser
 
 router = APIRouter(tags=["Posts"], prefix="/api/v1/posts")
 
@@ -16,14 +16,21 @@ router = APIRouter(tags=["Posts"], prefix="/api/v1/posts")
 def get_posts(
         session:SessionDep,
         offset: int = 0,
-        limit: Annotated[int, Query(le=100)] = 100,)->list[models.Post]:
-            posts = session.exec(select(models.Post).offset(offset).limit(limit)).all()
+        limit: Annotated[int, Query(le=100)] = 100,
+        current_user:dict = CurrentUser,
+        )->list[models.Post]:
+            #with user_id
+            posts = session.exec(select(models.Post).where(models.Post.user_id == current_user.id).offset(offset).limit(limit)).all()
             return {"success": True, "message": "Posts retrieved successfully", "data": posts}
          
 
 @router.post("/")
-def create(post_data:schemas.PostCreate,session:SessionDep):
+def create(post_obj:schemas.PostCreate,session:SessionDep,current_user:dict = CurrentUser):
+    post_data = post_obj.dict()
+    #add user_id to post_data
+    post_data.update({"user_id":current_user.id})
     post = models.Post.model_validate(post_data)
+    print(post)
     session.add(post)
     session.commit()
     session.refresh(post)

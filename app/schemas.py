@@ -42,12 +42,15 @@ class User(BaseModel):
     email: str
     created_at: datetime.datetime
     
-class UserResponse(BaseModel):
-    success: bool
-    message: str
-    data: Optional[User] = None
-    
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+class TokenData(BaseModel):
+    id: Optional[int] = None
+    
+class UserResponse(BaseModel):
+    user: Optional[User] = None
+    token: Token = None
+    
    

@@ -1,5 +1,7 @@
 
+from typing import Annotated
 from fastapi import Depends, FastAPI, Response,status,HTTPException,Query, APIRouter
+from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from .. import models,schemas,utils
 from sqlmodel import select
 from ..database import SessionDep
@@ -30,14 +32,17 @@ def register_user(user_data:schemas.RegisterUser,session:SessionDep):
         return {"success": True, "message": "User created successfully", "data": user.model_dump()}
     raise HTTPException(status_code=400, detail="User not created")
 
-@router.post("/login", response_model=schemas.UserResponse)
-def login_user(user_data:schemas.LoginUser,session:SessionDep):
-    user = session.exec(select(models.User).where(models.User.email == user_data.email)).first()
+@router.post("/login", response_model=schemas.Token)
+def login_user(user_data:Annotated[OAuth2PasswordRequestForm, Depends()], session:SessionDep):
+    user = session.exec(select(models.User).where(models.User.email == user_data.username)).first()
     if not user:
-        raise HTTPException(status_code=404, detail="Invalid email or password")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid email or password")
     if not utils.verify(user_data.password, user.password):
-        raise HTTPException(status_code=400, detail="Invalid email or password")
-    return {"success": True, "message": "User logged in successfully", "data": user.model_dump()}
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid email or password")
+    # create jwt token
+    token = utils.create_jwt_token({"user_id": user.id})
+    #add token to response model
+    return  schemas.Token(access_token=token, token_type="bearer")
     
 
   
