@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Optional
+from typing import Annotated, Optional
 from sqlalchemy import TIME, TIMESTAMP,Column,DateTime, ForeignKey
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 from pydantic import EmailStr
-
+from sqlalchemy.orm import relationship
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
@@ -29,6 +29,8 @@ class Post(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False)
     )
     user_id: int = Field(sa_column=Column( ForeignKey("users.id", ondelete="CASCADE"), nullable=False))
+    user:User | None = Relationship(sa_relationship=relationship("User"))
+
     
     
 

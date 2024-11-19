@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, List
 from fastapi import Depends, Response,status,HTTPException,Query, APIRouter
 from .. import models,schemas
 from sqlmodel import select
@@ -12,7 +12,7 @@ router = APIRouter(tags=["Posts"], prefix="/api/v1/posts")
 
     
 
-@router.get("/", response_model=schemas.ResponseModel)
+@router.get("/", response_model=List[schemas.PostBase])
 def get_posts(
         session:SessionDep,
         offset: int = 0,
@@ -21,7 +21,8 @@ def get_posts(
         )->list[models.Post]:
             #with user_id
             posts = session.exec(select(models.Post).where(models.Post.user_id == current_user.id).offset(offset).limit(limit)).all()
-            return {"success": True, "message": "Posts retrieved successfully", "data": posts}
+                        
+            return posts
          
 
 @router.post("/")
@@ -39,15 +40,15 @@ def create(post_obj:schemas.PostCreate,session:SessionDep,current_user:dict = Cu
     
     
 @router.get("/{id}", response_model=schemas.ResponseModel)
-def get_post(session:SessionDep,id:int, response: Response):
-        post = session.get(models.Post, id) 
+def get_post(session:SessionDep,id:int,  current_user:dict = CurrentUser):
+        post = session.exec(select(models.Post).where(models.Post.id == id and models.Post.user_id == current_user.id)).first()
         if post is None:
-            return {"success": False, "message": "Post not found"}
+            raise HTTPException(status_code=404, detail="Post not found")
         return {"success": True, "message": "Post retrieved successfully", "data": post.model_dump()}
    
 @router.put("/{id}")
-def update_post(session: SessionDep, id: int, post_data: schemas.PostUpdate):
-    db_post = session.get(models.Post, id)
+def update_post(session: SessionDep, id: int, post_data: schemas.PostUpdate, current_user:dict = CurrentUser):
+    db_post = session.exec(select(models.Post).where(models.Post.id == id and models.Post.user_id == current_user.id)).first()
     if db_post is None:
         raise HTTPException(status_code=404, detail="Post not found")
     post = post_data.model_dump(exclude_unset=True)
@@ -60,8 +61,8 @@ def update_post(session: SessionDep, id: int, post_data: schemas.PostUpdate):
     
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(session: SessionDep, id: int):
-    post = session.exec(select(models.Post).where(models.Post.id == id)).first()
+def delete_post(session: SessionDep, id: int, current_user:dict = CurrentUser):
+    post = session.exec(select(models.Post).where(models.Post.id == id and models.Post.user_id == current_user.id)).first()
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
     session.delete(post)

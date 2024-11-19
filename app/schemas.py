@@ -5,11 +5,17 @@ from pydantic import BaseModel
 
 
 
+class User(BaseModel):
+    id: int
+    email: str
+    created_at: datetime.datetime
+
 class PostBase(BaseModel):
     title: str
     content: str
     published: bool = True
     rating: int = None
+    user: Optional[User] = None
     
 class PostCreate(PostBase):
     pass
@@ -33,16 +39,7 @@ class RegisterUser(UserBase):
     
 class LoginUser(UserBase):
     pass
-
-
-
-#Exclude password from response
-class User(BaseModel):
-    id: int
-    email: str
-    created_at: datetime.datetime
     
-
 class Token(BaseModel):
     access_token: str
     token_type: str
