@@ -4,6 +4,7 @@ from .. import models,schemas
 from sqlmodel import select
 from ..database import SessionDep
 from ..utils import CurrentUser
+from sqlalchemy import func
 
 router = APIRouter(tags=["Posts"], prefix="/api/v1/posts")
 
@@ -21,6 +22,16 @@ def get_posts(
         )->list[models.Post]:
             #with user_id
             posts = session.exec(select(models.Post).where(models.Post.user_id == current_user.id).offset(offset).limit(limit)).all()
+            results = session.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id)
+            print(results)
+            #add votes to post
+            posts = [post.dict() for post in posts]
+            
+            for post in posts:
+                for result in results:
+                    if post["id"] == result[0].id:
+                        post["votes"] = result[1]
+                        
                         
             return posts
          
@@ -31,7 +42,7 @@ def create(post_obj:schemas.PostCreate,session:SessionDep,current_user:dict = Cu
     #add user_id to post_data
     post_data.update({"user_id":current_user.id})
     post = models.Post.model_validate(post_data)
-    print(post)
+    # print(post)
     session.add(post)
     session.commit()
     session.refresh(post)

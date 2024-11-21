@@ -6,6 +6,7 @@ from . import schemas, models
 from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from .database import SessionDep
+from .config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
@@ -19,9 +20,9 @@ def verify(plain_password, hashed_password):
 
 # JWT token
 #Secret key
-SECRET_KEY = "48d11d39652af5f09650164155324b032f7bb5e6a34d4003d73d0932e118e32"
-ALGORITHM = "HS256"
-ISSUER = "example.com"
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ISSUER = settings.issuer
 
 
 def create_jwt_token(data: dict,expires_in: int = 60):
@@ -53,7 +54,6 @@ def get_current_user(token: Annotated[schemas.UserResponse, Depends(oauth2_schem
         detail='Could not validate credentials', 
         headers={"WWW-Authenticate": "Bearer"},
         )
-    print(token)
     token = decode_jwt_token(token,credentials_exception)
     if token is None:
         raise credentials_exception

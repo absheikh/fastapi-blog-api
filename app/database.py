@@ -2,10 +2,10 @@ from typing import Annotated
 from . import models
 from fastapi import Depends
 from sqlmodel import  Session, create_engine
+from .config import settings
 
-database_url = "postgresql+psycopg://postgres:123456@localhost/fastapi_db"
 
-engine = create_engine(database_url)
+engine = create_engine(settings.database_url)
 
 session = Session(autocommit=False, autoflush=False, bind=engine)
 

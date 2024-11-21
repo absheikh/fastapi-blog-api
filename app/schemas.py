@@ -1,7 +1,8 @@
 
 import datetime
-from typing import Optional, Union
-from pydantic import BaseModel
+from typing import Annotated, Optional, Union
+from unittest.mock import Base
+from pydantic import BaseModel, conint
 
 
 
@@ -11,17 +12,30 @@ class User(BaseModel):
     created_at: datetime.datetime
 
 class PostBase(BaseModel):
+    id:int
     title: str
     content: str
     published: bool = True
     rating: int = None
     user: Optional[User] = None
+    votes: int = 0
+    
+
+class PostOut(BaseModel):
+    post: PostBase
+    votes: int
     
 class PostCreate(PostBase):
-    pass
+    title: str
+    content: str
+    published: bool = True
+    rating: int = None
 
 class PostUpdate(PostBase):
-    pass
+    title: str
+    content: str
+    published: bool = True
+    rating: int = None
 
 class ResponseModel(BaseModel):
     success: bool
@@ -50,4 +64,6 @@ class UserResponse(BaseModel):
     user: Optional[User] = None
     token: Token = None
     
-   
+class Vote(BaseModel):
+    post_id: int
+    dir: Annotated[int, conint(le=1)]

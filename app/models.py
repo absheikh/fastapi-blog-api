@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship
 class User(SQLModel, table=True):
     __tablename__ = "users"
     id: Optional[int] = Field(default=None, primary_key=True)
-    email: EmailStr
+    email: EmailStr = Field(nullable=False, unique=True)
     password: str
     created_at: datetime = Field(
         default_factory=datetime.utcnow,  # Automatically set to current timestamp
@@ -30,7 +30,12 @@ class Post(SQLModel, table=True):
     )
     user_id: int = Field(sa_column=Column( ForeignKey("users.id", ondelete="CASCADE"), nullable=False))
     user:User | None = Relationship(sa_relationship=relationship("User"))
+    
 
+class Vote(SQLModel, table=True):
+    __tablename__ = "votes"
+    user_id: int = Field(sa_column=Column( ForeignKey("users.id", ondelete="CASCADE"), nullable=False, primary_key=True))
+    post_id: int = Field(sa_column=Column( ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, primary_key=True))
     
     
 
