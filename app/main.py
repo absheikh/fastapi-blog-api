@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="FastAPI SQLModel", version="0.1.0")
 
+
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -24,6 +25,10 @@ async def on_startup():
 app.include_router(auth.router)
 app.include_router(posts.router)
 app.include_router(votes.router)
+
+@app.get("/")
+async def root():
+    return {"status": "ok"}
 
 
 
