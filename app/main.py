@@ -30,6 +30,10 @@ app.include_router(votes.router)
 async def root():
     return {"status": "ok"}
 
+@app.get("/status")
+async def root():
+    return {"message": "Deployed using CI/CD pipeline with Github Actions"} 
+
 
 
   
