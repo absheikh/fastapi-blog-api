@@ -9,7 +9,6 @@ jobs:
   job1:
     environment:
       name: dev
-  deploy:
     runs-on: ubuntu-latest
 
     steps:
