@@ -6,40 +6,37 @@ on:
       - main
 
 jobs:
-  job1:
-    environment:
-      name: dev
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      ALGORITHM: ${{ secrets.ALGORITHM }}
-      ISSUER: ${{ secrets.ISSUER }}
-    
-    runs-on: ubuntu-latest 
+  deploy:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: pulling git repo
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: install python version 3.9
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: "3.9"
 
-      - name: update pip
-        run: python -m pip install --upgrade pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: install all dependencies
-        run: pip install -r requirements.txt
-
-      - name: deploy to ubuntu server
+      - name: Start ssh-agent
         uses: webfactory/ssh-agent@v0.5.4
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
           ssh-private-key: ${{ secrets.SSH_KEY }}
           ssh-passphrase: ${{ secrets.SSH_PASSPHRASE }}
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}            # Host of your server
+          username: ${{ secrets.USERNAME }}    # SSH user
+          key: ${{ secrets.SSH_KEY }}          # Private key
+          passphrase: ${{ secrets.SSH_PASSPHRASE }} # Passphrase for the private key
           script: |
             cd /src/
             git pull
-            echo systemctl restart api.service
-
+            systemctl restart api.service
