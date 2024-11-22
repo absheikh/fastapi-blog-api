@@ -6,10 +6,10 @@ on:
       - main
 
 jobs:
-  environment:
-    name: dev
-  deploy:
-    runs-on: ubuntu-latest
+    environment:
+      name: dev
+    deploy:
+      runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
